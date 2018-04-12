@@ -7,6 +7,8 @@
 namespace c10 { namespace cpu {
 
 class CPUTensorImpl final : public guts::TensorImpl {
+  // dzhulgakov: I'd strongly suggest to keep around actual type, not just size to do type checking. Please look at TypeMeta - it solves a lot of issues
+  // dzhulgakov: Caffe2 now supports fancy stuff like Tensor of std::string (or other types), TF too. I think we should handle it which requires some TypeMeta-like care to call constructors at right places. We can reuse it verbatim
   std::size_t element_size_;
   // Note: storage->size() may be greater than the recorded size of the tensor
   CPUStorage storage_;
@@ -23,6 +25,7 @@ class CPUTensorImpl final : public guts::TensorImpl {
   // NB: reserved from Caffe2 axed; as there are TWO sizes, we can easily
   // implement the reserved pattern by having the storage be larger than the
   // size recorded in a Tensor.  Hooray!
+  // dzhulgakov: superlike! :)
   // TODO: Move this to the parent class
   // Reminder: The way stride works is:
   //    size[0]*stride[0] + size[1]*stride[1] + ...
@@ -32,6 +35,7 @@ class CPUTensorImpl final : public guts::TensorImpl {
   //    size[i] == 0 (useful to maintain size information!)
   //    stride[i] % size[i-1] != 0 (rolling window strides / not "embeddable")
   //    len(size) == 0 (scalars)
+  // dzhulgakov: how much "stride analysis" do implementations usually do in TH?
   SmallVector<int64_t> stride_;
 public:
   CPUTensorImpl(std::size_t element_size, const CPUStorage& storage)
