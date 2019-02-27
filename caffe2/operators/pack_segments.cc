@@ -68,13 +68,17 @@ bool PackSegmentsOp<CPUContext>::DoRunWithType2() {
   }
 
   // Do padding
+  std::cerr << "!! before" << data.numel() << "\n";
   if (output->template IsType<float>()) {
+    std::cerr << "!! inside" << "\n";
+    std::cerr << "!! pointer " << output->template mutable_data<float>() << "\n";
     math::Set<float, CPUContext>(
         output->numel(),
         padding_,
         output->template mutable_data<float>(),
         &context_);
   }
+  std::cerr << "!! after" << data.size(0) << "\n";
   if (!data.size(0)) {
     // Return empty output (with the proper shape)
     return true;

@@ -359,7 +359,7 @@ DELEGATE_SCALE(float, double, cblas_dscal)
 #define CAFFE2_SPECIALIZED_SET(T)                                    \
   template <>                                                        \
   C10_EXPORT void Set<T, CPUContext>(                                \
-      const int N, const T alpha, T* Y, CPUContext* /* context */) { \
+      const size_t N, const T alpha, T* Y, CPUContext* /* context */) { \
     if (N == 0) {                                                    \
       return;                                                        \
     }                                                                \
