@@ -701,6 +701,25 @@ void initPythonIRBindings(PyObject* module_) {
   py::class_<Use>(m, "Use")
       .def_readonly("user", &Use::user)
       .def_readonly("offset", &Use::offset);
+
+  m.def("qqq", [](std::shared_ptr<Graph>& g, py::object observer_class) {
+    static std::string x = "foo";
+    x += "1";
+    py::object obs = observer_class(x);
+    Node* new_node = g->insertNode(g->createPythonOp(
+                                         THPObjectPtr(obs.release().ptr()), "d", {}));
+    new_node->addInput(g->inputs()[0]);
+    new_node->addOutput()->setType(NoneType::get());
+  });
+  m.def("qqq_stats", [](std::shared_ptr<Graph>& g) {
+    for (const auto& n : g->nodes()) {
+      if (n->kind() == prim::PythonOp) {
+        auto obs = py::handle(static_cast<PythonOp*>(n)->pyobj.get());
+        int stats = obs.attr("get_stats")().cast<int>();
+        std::cout << "!!!! " << stats << std::endl;
+      }
+    }
+  });
 }
 } // namespace jit
 } // namespace torch
