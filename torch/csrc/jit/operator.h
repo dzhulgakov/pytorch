@@ -123,12 +123,22 @@ struct TORCH_API Operator {
 
   bool matches(const Node* node) const;
 
+  Operation wrap(Operation op) const {
+    return [this, op](Stack& stack) {
+      auto start = std::chrono::high_resolution_clock::now();
+      int ret = op(stack);
+      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+      std::cerr << "Elapsed " << micros << " us: " << schema() << std::endl;
+      return ret;
+    };
+  }
+
   Operation getOperation(const Node* node = nullptr) const {
     if (op_) {
-      return *op_;
+      return wrap(*op_);
     }
     AT_ASSERT(node != nullptr);
-    return op_creator_(node);
+    return wrap(op_creator_(node));
   }
 
   const FunctionSchema& schema() const {
