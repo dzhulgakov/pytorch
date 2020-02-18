@@ -149,6 +149,10 @@ struct TORCH_API Operator {
     return c10Handle_.has_value();
   }
 
+  const c10::OperatorHandle& getC10Op() const {
+    return *c10Handle_;
+  }
+
   c10::AliasAnalysisKind aliasAnalysisKind() const {
     if (isC10Op()) {
       const FunctionSchema& schemaRef = schema();

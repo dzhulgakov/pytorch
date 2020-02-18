@@ -522,8 +522,21 @@ struct CodeImpl {
 
   void emitOperator(Node* node) {
     emitLoadInputs(node->inputs());
-    insertInstruction(OP, operator_table_.size());
-    operator_table_.emplace_back(getOperation(node));
+    const auto& op = getOperatorFor(node);
+    if (op.isC10Op()) {
+      uintptr_t casted = *reinterpret_cast<const uintptr_t*>(&op.getC10Op());
+      {
+	      Instruction tmp(OPC10, casted);
+	      uintptr_t addr = *reinterpret_cast<uintptr_t*>(&tmp);
+	      addr >>= 16;
+	      std::cerr << "!!! " << (addr == casted) << " - " << addr << " " << casted << std::endl;
+      }
+      instructions_.emplace_back(OPC10, casted);
+      instructions_source_.emplace_back(current_node_);
+    } else {
+      insertInstruction(OP, operator_table_.size());
+      operator_table_.emplace_back(op.getOperation(node));
+    }
   }
 
   void emitWait(Node* node) {
@@ -887,6 +900,17 @@ struct InterpreterStateImpl : c10::intrusive_ptr_target {
         switch (inst.op) {
           case OP:
             af.operators[inst.X](stack);
+            ++af.pc;
+            break;
+          case OPC10:
+	    static_assert(sizeof(Instruction) == sizeof(uintptr_t), "Must be same");
+	    static_assert(sizeof(Instruction) == sizeof(c10::OperatorHandle), "Must be same");
+	    {
+	      uintptr_t addr = *reinterpret_cast<uintptr_t*>(&inst);
+	      addr >>= 16;
+	      c10::OperatorHandle& handle = *reinterpret_cast<c10::OperatorHandle*>(&addr);
+	      c10::Dispatcher::singleton().callBoxed(handle, &stack);
+	    }
             ++af.pc;
             break;
           case OPN:

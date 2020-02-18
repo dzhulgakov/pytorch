@@ -2,6 +2,7 @@
 #include <typeinfo>
 #include <stdint.h>
 #include <unordered_set>
+#include <iostream>
 
 namespace torch {
 namespace jit {
@@ -20,6 +21,7 @@ namespace jit {
 #define FORALL_OPCODES(_)                                                   \
   _(OP, "O") /* invoke operator X */                                        \
   _(OPN, "OI") /* invoke vararg operator X with N arguments */              \
+  _(OPC10, "OO") \
   _(LOAD, "R") /* push a value from a register X */                         \
   _(MOVE, "R") /* push a value from register X, clearing the register */    \
   _(STOREN, "RI") /* store N values to registers [X, X+N) */                \
@@ -54,6 +56,13 @@ struct Instruction {
   // TODO: check for overflow
   Instruction(OpCode op, int32_t X, uint16_t N)
       : op(op), padding(0), N(N), X(X) {}
+  Instruction(OpCode op, uintptr_t addr): op(op), padding(0) {
+    if ((addr >> 48) != 0) {
+      std::cerr << "Bad address: " << addr << "\n";
+    }
+    N = addr & ((1LL<<16)-1);
+    X = (addr >> 16) & ((1LL<<32)-1);
+  }
 };
 
 bool isOpSupportedInMobile(OpCode op);
