@@ -980,8 +980,9 @@ RegisterOperators reg2({
           pop(stack, t);
           c10::List<int64_t> elems;
           elems.reserve(t.size(0));
+          // TODO: use tensor_accessor here
           for (int i = 0; i < t.size(0); i++) {
-            elems.push_back(*t[i].data_ptr<int32_t>());
+            elems.push_back(t[i].item<int32_t>());
           }
           push(stack, std::move(elems));
         },

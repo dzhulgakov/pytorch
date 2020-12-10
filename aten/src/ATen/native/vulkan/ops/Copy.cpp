@@ -33,9 +33,10 @@ Tensor& copy_(Tensor& self, const Tensor& src) {
 
       Future::Payload v_self_payload = v_self_future.wait();
 
+      auto src_contig = src.contiguous();
       memcpy(
           v_self_payload.get(),
-          src.contiguous().data_ptr<float>(),
+          src_contig.data_ptr<float>(),
           std::min(src.nbytes(), self.nbytes()));
     }
     // Vulkan -> Vulkan

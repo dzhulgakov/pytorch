@@ -379,12 +379,26 @@ class TORCH_API Tensor {
   /// TensorOptions.h.
   TensorOptions options() const;
 
-  void* data_ptr() const {
+  void* data_ptr() const & {
     return this->unsafeGetTensorImpl()->data();
   }
 
+  void* data_ptr() const && = delete;
+
   template <typename T>
-  T * data_ptr() const;
+  T * data_ptr() const &;
+
+  template <typename T>
+  T * data_ptr() const && {
+    static_assert(
+        !std::is_same<T, T>::value,
+        "Calling data_ptr() on temporary is potentially unsafe and can "
+        "indicate use-after-free bug if it was the last reference to the tensor"
+        " (as in `contiguous().data_ptr()`). Please store result in a variable "
+        "first. If you're trying to access the value of a single-element tensor"
+        " use item<T>() instead.");
+    return this->data_ptr<T>();
+  }
 
   template<typename T>
   C10_DEPRECATED_MESSAGE("Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead.")

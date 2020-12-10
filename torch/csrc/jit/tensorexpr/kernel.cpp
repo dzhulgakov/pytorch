@@ -2198,7 +2198,8 @@ std::vector<CodeGen::CallArg> TensorExprKernel::prepareRunArgs(
     } else if (input.isDouble()) {
       runArgs.emplace_back((float)input.toDouble());
     } else if (input.isTensor()) {
-      runArgs.emplace_back(input.toTensor().data_ptr());
+      const auto& t = input.toTensor();
+      runArgs.emplace_back(t.data_ptr());
     }
   }
 

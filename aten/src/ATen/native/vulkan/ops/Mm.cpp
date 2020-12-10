@@ -62,9 +62,10 @@ vTensor pack_biases(
     Future::Payload v_bias_payload = v_bias_future.wait();
 
     if (bias_arg) {
+      auto bias_contig = bias_arg->contiguous();
       memcpy(
           v_bias_payload.get(),
-          bias_arg->contiguous().data_ptr<float>(),
+          bias_contig.data_ptr<float>(),
           std::min(bias_arg->nbytes(), v_bias.nbytes()));
     } else {
       memset(

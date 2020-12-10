@@ -278,7 +278,8 @@ std::tuple<Tensor, Tensor> choose_qparams_optimized(
 
   float stepsize = (xmax - xmin) / n_bins;
   int min_bins = n_bins * (1.0 - (float) ratio);
-  const float* input = input_tensor.contiguous().data_ptr<float>();
+  auto input_contig = input_tensor.contiguous();
+  const float* input = input_contig.data_ptr<float>();
   std::vector<float> q_input(numel);
 
   float loss =
